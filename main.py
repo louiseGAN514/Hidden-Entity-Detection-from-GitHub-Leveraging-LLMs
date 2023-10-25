@@ -48,7 +48,7 @@ def extract_block():
         block_dict[k] = [str(e) for e in bs4_find(content, 'codeblock' #)]
         , patterns=['@article', '@inproceedings', '@misc', '@Article', 
             '@InProceedings', ])]
-    print(len({k for k in block_dict if not block_dict[k]==[]}))
+    print('The number of XML containing extracted blocks is ', len({k for k in block_dict if not block_dict[k]==[]}))
 
     # with open('textblocks.json', 'w') as fw:
     #    json.dump(block_dict, fw, indent=4)
@@ -71,7 +71,7 @@ def extract_link():
                 elif 'data' in str(_match.attrs['destination']):
                     _links.append(str(_match))
         link_dict[k] = _links
-    print(len({k for k in link_dict if not link_dict[k]==[]}))
+    print('The number of XML containing extracted links is ', len({k for k in link_dict if not link_dict[k]==[]}))
     with open('links.json', 'w') as fw:
         json.dump(link_dict, fw, indent=4)
 
@@ -84,7 +84,7 @@ LINKS_JSON_FILE = './res/links.json'
 with open(LINKS_JSON_FILE, 'r') as fr:
     links_dict = json.load(fr)
 links_strs = [v for k,v in links_dict.items() if len(v) > 0]
-print(len(links_strs))
+print('The number of XML containing extracted links is: ', len(links_strs))
 links, texts, prev_texts, next_texts = [], [], [], []
 for link_str in links_strs:
     for _link_str in link_str:
@@ -98,7 +98,11 @@ for link_str in links_strs:
 
 links_extract_df = pd.DataFrame(data={'link':links, 'text':texts,
     'prev_text': prev_texts, 'next_text': next_texts})
-print(links_extract_df['text'].head(20))
+print(links_extract_df.head(5))
 print(len(links_extract_df))
 links_extract_df.to_csv('./res/links_extraction_no_pdf_link.csv', index=False)
-print(len(links_extract_df['link'].unique()))
+print('Unique link number is ', len(links_extract_df['link'].unique()))
+
+links_with_candidname_df = links_extract_df[links_extract_df['text'].str.contains('(?i)data(?:\s|)set(?:s|)')]
+links_with_candidname_df.to_csv('./res/links_with_candidate_name.csv',index=False)
+print('Unique link number with a candidate name is ', len(links_with_candidname_df['link'].unique()))
