@@ -83,33 +83,34 @@ def extract_link():
 
 # extract_link()
 
-# ------------- 
-# read & process links.json
-# -------------
-LINKS_JSON_FILE = './res/links.json'
-with open(LINKS_JSON_FILE, 'r') as fr:
-    links_dict = json.load(fr)
-links_strs = [(k,v) for k,v in links_dict.items() if len(v) > 0]
-print('The number of XML containing extracted links is: ', len(links_strs))
 repo_ids, links, texts, prev_texts, next_texts = [], [], [], [], []
-for repo_id, link_str in links_strs:
-    for _link_str in link_str:
-        _link, _text, _prev_text, _next_text = hyperlink_extraction(_link_str)
-        if _link[-3:] == 'pdf' or _link[-3:]=='pth' or _link[-3:]=='log':
-            continue
-        repo_ids.append(repo_id)
-        links.append(_link)
-        texts.append(_text)
-        prev_texts.append(_prev_text)
-        next_texts.append(_next_text)
+for k in tqdm(readmes_xml_noempty):
+    readme = readmes_xml_noempty[k]['content']
+    try:
+        _links, _texts, _prev_texts,_next_texts = hyperlink_extraction(readme)
+        if type(_links) == str:
+            _links, _texts, _prev_texts, _next_texts = [_links], [_texts],[_prev_texts],[_next_texts]
+        for _link,_text,_prev_text, _next_text in zip(_links,_texts,_prev_texts,_next_texts):
+            # _link, _text, _prev_text, _next_text = ee
+            if not('dataset' in _link or 'corpus' in _link or 'data' in _link):
+                continue
+            if _link[-3:] == 'pdf' or _link[-3:]=='pth' or _link[-3:]=='log':
+                continue
+            repo_ids.append(k)
+            links.append(_link)
+            texts.append(_text)
+            prev_texts.append(_prev_text)
+            next_texts.append(_next_text)
+    except TypeError as e:
+        pass
 
 links_extract_df = pd.DataFrame(data={'repoId':repo_ids, 'link':links, 'text':texts,
     'prev_text': prev_texts, 'next_text': next_texts})
 print(links_extract_df.head(5))
 print(len(links_extract_df))
-links_extract_df.to_csv('./res/links_extraction_no_pdf_link_withID.csv', index=False)
+links_extract_df.to_csv('./res/links_extraction_no_pdf_link_withID_context.csv', index=False)
 print('Unique link number is ', len(links_extract_df['link'].unique()))
 
 links_with_candidname_df = links_extract_df[links_extract_df['text'].str.contains('(?i)data(?:\s|)set(?:s|)')]
-links_with_candidname_df.to_csv('./res/links_with_candidate_name_withID.csv',index=False)
+links_with_candidname_df.to_csv('./res/links_with_candidate_name_withID_context.csv',index=False)
 print('Unique link number with a candidate name is ', len(links_with_candidname_df['link'].unique()))

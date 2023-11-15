@@ -15,9 +15,14 @@ def hyperlink_extraction(hl_str):
             next_text = _match.nextSibling
         return link, text, prev_text, next_text
     else:
+        link, text, prev_text, next_text = [], [], [], []
         for _match in matches:
-            pass
-        pass
+            link.append(_match.attrs['destination'])
+            text.append(_match.text)
+            prev_text.append(_match.previousSibling)
+            next_text.append(_match.nextSibling)
+        return link, text, prev_text, next_text
+
 
 # link_str = "<link destination=\"http://pandas.pydata.org/\">pandas</link>"
 # print(hyperlink_extraction(link_str))
