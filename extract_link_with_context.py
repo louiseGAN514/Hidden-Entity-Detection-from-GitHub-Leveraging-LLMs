@@ -2,6 +2,7 @@ import json
 
 from bs4 import BeautifulSoup
 from pprint import pprint
+import numpy as np
 import pandas as pd
 from tqdm import tqdm
 from utils import hyperlink_extraction, para_extraction_with_links, para_extraction_with_links_XML_parser
@@ -186,7 +187,9 @@ def extract_link_with_context_XML_parser():
         'text': texts, 'context': contexts, 'linkStart':link_starts, 'linkEnd':link_ends, 'textStart':text_starts, 'textEnd': text_ends})
     print(links_extract_df.head(5))
     print(len(links_extract_df))
-    links_extract_df.to_csv('./res/para_extraction_with_links_XML_parser_no_pdf_link_withID_281123.csv', index=False, sep='|')
+    # links_extract_df.to_csv('./res/para_extraction_with_links_XML_parser_no_pdf_link_withID_281123.csv', index=False, sep='|||')
+    np_links_extract_df = links_extract_df.to_numpy()
+    np.savetxt('./res/para_extraction_with_links_XML_parser_no_pdf_link_withID_281123.csv', np_links_extract_df, fmt='%s',delimiter='|||')
     print('Unique link number is ', len(links_extract_df['link'].unique()))
 
 
