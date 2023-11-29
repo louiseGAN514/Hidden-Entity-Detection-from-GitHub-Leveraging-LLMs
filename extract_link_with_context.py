@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from pprint import pprint
 import pandas as pd
 from tqdm import tqdm
-from utils import hyperlink_extraction
+from utils import hyperlink_extraction, para_extraction_with_links, para_extraction_with_links_XML_parser
 
 # -------------------------
 # use beautifulsoup
@@ -34,6 +34,7 @@ README_JSON_XML_FILE = './data/readme2_v3.json'
 with open(README_JSON_XML_FILE, 'r') as fr:
     readmes_xml = json.load(fr)
 readmes_xml_noempty = {int(k):v for k,v in readmes_xml.items() if not v == ''}
+
 # print(len(readmes_xml_noempty))
 # for k,v in readmes_xml_noempty.items():
 #     _name, _fullname, _content = v['name'], v['fullname'], v['content']
@@ -83,34 +84,110 @@ def extract_link():
 
 # extract_link()
 
-repo_ids, links, texts, prev_texts, next_texts = [], [], [], [], []
-for k in tqdm(readmes_xml_noempty):
-    readme = readmes_xml_noempty[k]['content']
-    try:
-        _links, _texts, _prev_texts,_next_texts = hyperlink_extraction(readme)
-        if type(_links) == str:
-            _links, _texts, _prev_texts, _next_texts = [_links], [_texts],[_prev_texts],[_next_texts]
-        for _link,_text,_prev_text, _next_text in zip(_links,_texts,_prev_texts,_next_texts):
-            # _link, _text, _prev_text, _next_text = ee
-            if not('dataset' in _link or 'corpus' in _link or 'data' in _link):
-                continue
-            if _link[-3:] == 'pdf' or _link[-3:]=='pth' or _link[-3:]=='log':
-                continue
-            repo_ids.append(k)
-            links.append(_link)
-            texts.append(_text)
-            prev_texts.append(_prev_text)
-            next_texts.append(_next_text)
-    except TypeError as e:
-        pass
+def extract_link_with_context_old():
+    repo_ids, links, texts, prev_texts, next_texts = [], [], [], [], []
+    for k in tqdm(readmes_xml_noempty):
+        readme = readmes_xml_noempty[k]['content']
+        """add readme preprocessing steps """
+        readme = readme.replace('\n', '')
+        try:
+            _links, _texts, _prev_texts,_next_texts = hyperlink_extraction(readme)
+            if type(_links) == str:
+                _links, _texts, _prev_texts, _next_texts = [_links], [_texts],[_prev_texts],[_next_texts]
+            for _link,_text,_prev_text, _next_text in zip(_links,_texts,_prev_texts,_next_texts):
+                # _link, _text, _prev_text, _next_text = ee
+                if not('dataset' in _link or 'corpus' in _link or 'data' in _link):
+                    continue
+                if _link[-3:] == 'pdf' or _link[-3:]=='pth' or _link[-3:]=='log':
+                    continue
+                repo_ids.append(k)
+                links.append(_link)
+                texts.append(_text)
+                prev_texts.append(_prev_text)
+                next_texts.append(_next_text)
+        except TypeError as e:
+            pass
 
-links_extract_df = pd.DataFrame(data={'repoId':repo_ids, 'link':links, 'text':texts,
-    'prev_text': prev_texts, 'next_text': next_texts})
-print(links_extract_df.head(5))
-print(len(links_extract_df))
-links_extract_df.to_csv('./res/links_extraction_no_pdf_link_withID_context.csv', index=False)
-print('Unique link number is ', len(links_extract_df['link'].unique()))
+    links_extract_df = pd.DataFrame(data={'repoId':repo_ids, 'link':links, 
+        'prev_text': prev_texts, 'text': texts, 'next_text': next_texts})
+    print(links_extract_df.head(5))
+    print(len(links_extract_df))
+    links_extract_df.to_csv('./res/links_extraction_no_pdf_link_withID_context_211123.csv', index=False, sep='|||')
+    print('Unique link number is ', len(links_extract_df['link'].unique()))
 
-links_with_candidname_df = links_extract_df[links_extract_df['text'].str.contains('(?i)data(?:\s|)set(?:s|)')]
-links_with_candidname_df.to_csv('./res/links_with_candidate_name_withID_context.csv',index=False)
-print('Unique link number with a candidate name is ', len(links_with_candidname_df['link'].unique()))
+    links_with_candidname_df = links_extract_df[links_extract_df['text'].str.contains('(?i)data(?:\s|)set(?:s|)')]
+    links_with_candidname_df.to_csv('./res/links_with_candidate_name_withID_context_211123.csv',index=False, sep='|||')
+    print('Unique link number with a candidate name is ', len(links_with_candidname_df['link'].unique()))
+
+
+def extract_link_with_context():
+    repo_ids, links, texts, contexts, raw_contexts = [],[], [], [], []
+    for k in tqdm(readmes_xml_noempty):
+        readme = readmes_xml_noempty[k]['content']
+        """add readme preprocessing steps """
+        readme = readme.replace('\n', '')
+        try:
+            _links, _texts, _contexts,_raw_contexts = para_extraction_with_links(readme)
+            for _link,_text,_context, _raw_context in zip(_links,_texts,_contexts,_raw_contexts):
+                # _link, _text, _prev_text, _next_text = ee
+                if not('dataset' in _link or 'corpus' in _link or 'data' in _link):
+                    continue
+                if _link[-3:] == 'pdf' or _link[-3:]=='pth' or _link[-3:]=='log':
+                    continue
+                repo_ids.append(k)
+                links.append(_link)
+                texts.append(_text)
+                contexts.append(_context)
+                raw_contexts.append(_raw_context)
+        except TypeError as e:
+            pass
+
+    links_extract_df = pd.DataFrame(data={'repoId':repo_ids, 'link':links, 
+        'text': texts, 'context': contexts, 'raw_context': raw_contexts})
+    print(links_extract_df.head(5))
+    print(len(links_extract_df))
+    links_extract_df.to_csv('./res/para_extraction_with_links_no_pdf_link_withID_221123.csv', index=False, sep='|')
+    print('Unique link number is ', len(links_extract_df['link'].unique()))
+
+
+
+def extract_link_with_context_XML_parser():
+    repo_ids, links, texts, contexts = [],[], [], []
+    link_starts, link_ends, text_starts, text_ends = [],[],[],[]
+    for k in tqdm(readmes_xml_noempty):
+        readme = readmes_xml_noempty[k]['content']
+        """add readme preprocessing steps """
+        readme = readme.replace('\n', '')
+        readme = ' '.join(readme.split())
+        try:
+            _contexts,_links = para_extraction_with_links_XML_parser(readme)
+            for _context, _link_list in zip(_contexts,_links):
+                # _link, _text, _prev_text, _next_text = ee
+                for _link_entry in _link_list:
+                    _link = _context[_link_entry['url_start']:_link_entry['url_end']]
+                    _text = _context[_link_entry['text_start']: _link_entry['text_end']]
+                    # print('link: ', _link, '\n', 'text:', _text)
+                    if not ('dataset' in _link or 'corpus' in _link or 'data' in _link):
+                        continue
+                    if _link[-3:] == 'pdf' or _link[-3:]=='pth' or _link[-3:]=='log':
+                        continue
+                    repo_ids.append(k)
+                    links.append(_link)
+                    texts.append(_text)
+                    contexts.append(_context)
+                    link_starts.append(_link_entry['url_start'])
+                    link_ends.append(_link_entry['url_end'])
+                    text_starts.append(_link_entry['text_start'])
+                    text_ends.append(_link_entry['text_end'])
+        except TypeError as e:
+            pass
+
+    links_extract_df = pd.DataFrame(data={'repoId':repo_ids, 'link':links, 
+        'text': texts, 'context': contexts, 'linkStart':link_starts, 'linkEnd':link_ends, 'textStart':text_starts, 'textEnd': text_ends})
+    print(links_extract_df.head(5))
+    print(len(links_extract_df))
+    links_extract_df.to_csv('./res/para_extraction_with_links_XML_parser_no_pdf_link_withID_281123.csv', index=False, sep='|')
+    print('Unique link number is ', len(links_extract_df['link'].unique()))
+
+
+extract_link_with_context_XML_parser()
