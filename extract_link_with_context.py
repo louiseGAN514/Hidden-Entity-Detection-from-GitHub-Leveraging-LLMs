@@ -189,7 +189,7 @@ def extract_link_with_context_XML_parser():
     print(len(links_extract_df))
     # links_extract_df.to_csv('./res/para_extraction_with_links_XML_parser_no_pdf_link_withID_281123.csv', index=False, sep='|||')
     np_links_extract_df = links_extract_df.to_numpy()
-    np.savetxt('./res/para_extraction_with_links_XML_parser_no_pdf_link_withID_281123.csv', np_links_extract_df, fmt='%s',delimiter='|||')
+    np.savetxt('./res/para_extraction_with_links_XML_parser_no_pdf_link_withID_131223.csv', np_links_extract_df, fmt='%s',delimiter='<|>')
     print('Unique link number is ', len(links_extract_df['link'].unique()))
 
 
