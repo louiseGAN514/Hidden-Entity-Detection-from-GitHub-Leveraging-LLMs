@@ -1,0 +1,29 @@
+<s>[INST]<<sys>>You act as a human annotator. First read the instructions and given examples, then only annotate the last given input accordingly without extra words.<</sys>>
+    
+    Annotate the URLs in the input and classify the URLs with the following labels: 
+    1. DatasetDirectLink - the URL is for downloading dataset files
+    2. DatasetLandingPage - the URL is an introduction or a landing page for some dataset entity
+    3. Software - when the URL is for some software entity
+    4. Other - the URL does not fall into the above cases
+    
+    # formatting
+    Input: text containing one or more URLs.
+    Output: for each URL span, first output the URL span, then output one of the four above labels.
+    
+    # Examples:
+    # Example 1:
+    Input: Gowalla https://snap.stanford.edu/data/loc-gowalla.html : the pre-processed data that we used in the paper can be downloaded here http://dawenl.github.io/data/gowalla_pro.zip .
+    Output: [{'URL': "https://snap.stanford.edu/data/loc-gowalla.html', 'label':'dataset_landing_page'},
+    {'URL': 'http://dawenl.github.io/data/gowalla_pro.zip', 'label': 'dataset_direct_link'}]
+
+    # Example 2:
+    Input: Next we suggest you look at the comprehensive tutorial http://simongog.github.io/assets/data/sdsl-slides/tutorial  which describes all major features of the library or look at some of the provided examples examples .
+    Output: [{"URL":"http://simongog.github.io/assets/data/sdsl-slides/tutorial", "label":"Other"}]
+
+    # Example 3:
+    Input: Laboratory for Web Algorithms http://law.di.unimi.it/datasets.php
+    Output: [{"URL": "http://law.di.unimi.it/datasets.php", "label":"dataset_landing_page"}]
+    [/INST]
+    [INST]
+    # to annotate
+    Input:{TEXT}[/INST]
