@@ -38,6 +38,14 @@ def run_extraction_task(modelname, context_anno_df, start_idx, cnt=1, adjust_max
         candid_sents = [context_anno_df['context'].iloc[i] for i in range(30)]
         values, indices = select_top_n_simi_sents(text, candid_sents)
         indices = indices.cpu().detach().numpy()[0]
+        
+        examples = ""
+    	for i, idx in enumerate(indices):
+        	_text, _urls, _labels = new_context_anno_df['context'].iloc[idx], new_context_anno_df['link'].iloc[idx], new_context_anno_df['link_type'].iloc[idx]
+            examples += '# Example {}\nInput: '.format(i+1) +_text +'\nOutput: {}'.format(str([{"URL": url, "label":label} for url, label in zip(_urls, _labels)]))
+        if i < len(indices):
+            examples += "\n\n"   
+
 
         _prompt = """<s>[INST]<<sys>>You act as a human annotator. First read the instructions and given examples, then only annotate the last given input accordingly without extra words. Your annotation has to use valid JSON syntax.<</sys>>
     
@@ -52,23 +60,7 @@ def run_extraction_task(modelname, context_anno_df, start_idx, cnt=1, adjust_max
     Output: for each URL span, first output the URL span, then output one of the four above labels.
     
     # Examples:
-    # Example 1:
-    Input: Gowalla https://snap.stanford.edu/data/loc-gowalla.html : the pre-processed data that we used in the paper can be downloaded here http://dawenl.github.io/data/gowalla_pro.zip .
-    Output: [{"URL": "https://snap.stanford.edu/data/loc-gowalla.html", "label":"dataset_landing_page"},
-    {"URL": "http://dawenl.github.io/data/gowalla_pro.zip", "label": "dataset_direct_link"}]
-
-    # Example 2:
-    Input: Next we suggest you look at the comprehensive tutorial http://simongog.github.io/assets/data/sdsl-slides/tutorial  which describes all major features of the library or look at some of the provided examples examples .
-    Output: [{"URL":"http://simongog.github.io/assets/data/sdsl-slides/tutorial", "label":"Other"}]
-
-    # Example 3:
-    Input: Laboratory for Web Algorithms http://law.di.unimi.it/datasets.php
-    Output: [{"URL": "http://law.di.unimi.it/datasets.php", "label":"dataset_landing_page"}]
-
-    # Example 4:
-    Input: Validatable http://www.rubydoc.info/github/heartcombo/devise/main/Devise/Models/Validatable : provides validations of email and password. It's optional and can be customized, so you're able to define your own validations.
-    Output: [{"URL": "http://www.rubydoc.info/github/heartcombo/devise/main/Devise/Models/Validatable", "label":"Software"}]
-    [/INST]
+    """ + examples + """[/INST]
     [INST]
     # to annotate
     Input:""" + text+"\n[/INST]"
@@ -119,6 +111,14 @@ def run_classification_task(modelname, context_anno_df, start_idx, cnt=1, adjust
         candid_sents = [new_context_anno_df['context'].iloc[i] for i in range(30)]
         values, indices = select_top_n_simi_sents(text, candid_sents)
         indices = indices.cpu().detach().numpy()[0]
+        
+        examples = ""
+    	for i, idx in enumerate(indices):
+        	_text, _urls, _labels = new_context_anno_df['context'].iloc[idx], new_context_anno_df['link'].iloc[idx], new_context_anno_df['link_type'].iloc[idx]
+        	examples += '# Example {}\nInput: '.format(i+1) + '{"context":"' +_text + '",' + '"target_URLs":[' + ','.join(['"' +e+ '"' for e in _urls]) + ']}\n'+'Output: {}'.format(str([{"URL": url, "label":label} for url, label in zip(_urls, _labels)]))
+        	if i < len(indices):
+            	examples += "\n\n" 
+
 
         _prompt = """<s>[INST]<<sys>>You act as a human annotator. First read the instructions and given examples, then only annotate the last given input accordingly without extra words. Your annotation has to use valid JSON syntax.<</sys>>
     
@@ -133,23 +133,7 @@ def run_classification_task(modelname, context_anno_df, start_idx, cnt=1, adjust
     Output: for each URL span, first output the URL span, then output one of the four above labels.
     
     # Examples:
-    # Example 1:
-    Input: {"context": "Gowalla https://snap.stanford.edu/data/loc-gowalla.html : the pre-processed data that we used in the paper can be downloaded here http://dawenl.github.io/data/gowalla_pro.zip .","target_URLs": ["https://snap.stanford.edu/data/loc-gowalla.html", "http://dawenl.github.io/data/gowalla_pro.zip"]}
-    Output: [{"URL": "https://snap.stanford.edu/data/loc-gowalla.html", "label":"dataset_landing_page"},
-    {"URL": "http://dawenl.github.io/data/gowalla_pro.zip", "label": "dataset_direct_link"}]
-
-    # Example 2:
-    Input: {"context": "Next we suggest you look at the comprehensive tutorial http://simongog.github.io/assets/data/sdsl-slides/tutorial  which describes all major features of the library or look at some of the provided examples examples .","target_URLs": ["http://simongog.github.io/assets/data/sdsl-slides/tutorial"]}
-    Output: [{"URL":"http://simongog.github.io/assets/data/sdsl-slides/tutorial", "label":"Other"}]
-
-    # Example 3:
-    Input: {"context": "Laboratory for Web Algorithms http://law.di.unimi.it/datasets.php", "target_URLs":"http://law.di.unimi.it/datasets.php"}
-    Output: [{"URL": "http://law.di.unimi.it/datasets.php", "label":"dataset_landing_page"}]
-
-    # Example 4:
-    Input: {"context": "Validatable http://www.rubydoc.info/github/heartcombo/devise/main/Devise/Models/Validatable : provides validations of email and password. It's optional and can be customized, so you're able to define your own validations.", "target_URLs":"http://www.rubydoc.info/github/heartcombo/devise/main/Devise/Models/Validatable"}
-    Output: [{"URL": "http://www.rubydoc.info/github/heartcombo/devise/main/Devise/Models/Validatable", "label":"Software"}]
-    [/INST]
+    """ + examples +"""[/INST]
     [INST]
     # to annotate
     Input:"""+ total_input + "\n[/INST]"
