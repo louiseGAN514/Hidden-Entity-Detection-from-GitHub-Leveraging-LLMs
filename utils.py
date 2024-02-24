@@ -26,6 +26,14 @@ def partial_match(s1 : str, s2 : str) -> float:
 
 
 def parse_answer(ans_str):
+    if '[INST]' in ans_str.strip()[:6]:
+        ans_str = ans_str.strip()[6:].strip()
+    if 'NST]' in ans_str.strip()[:4]:
+        ans_str = ans_str.strip()[4:].strip()
+    if 'Note:' in ans_str.strip():
+        ans_str = ans_str.strip().split('Note:')[0].strip()
+
+    ans_str = ans_str.strip()
     ans_str = ' '.join(ans_str.split())
     # print(ans_str)
     if 'input:' in ans_str:
@@ -50,23 +58,113 @@ def parse_answer(ans_str):
         ans_str = ans_str.strip().split('Output:')[-1]
     elif 'output:' in ans_str:
         ans_str = ans_str.strip().split('output:')[-1]
+    elif 'put:' in ans_str:
+        ans_str = ans_str.strip().split('put:')[-1]
+    elif 'labels:' in ans_str:
+        ans_str = ans_str.strip().split('labels:')[-1].strip()
     #ans_str = [split for split in ans_str if split != '']
     if 'Output:' in ans_str:
         ans_str = ans_str.strip().split('Output:')[-1] 
      
     if '[{' in ans_str:
-        ans_str = ans_str.split('}]')[0] + '}]'
+        if '}]' in ans_str:
+            ans_str = ans_str.split('}]')[0] + '}]'
+        elif '} ]' in ans_str:
+            ans_str = ans_str.split('} ]')[0] + '}]'
+        elif '}' in ans_str:
+            ans_str = ans_str.split('}')[0] + '}]'
         if '*' in ans_str:
             ans_str = ans_str.split('*')[-1]
         ans_str = ans_str.strip()
         try:
             ans_str = ans_str.replace("\'", "\"")
-                            
+            ans_str = ans_str.replace("\\_", "_").replace(', ', ',')
             ans_str = json.loads(ans_str)
         except Exception as e:
             # print(ans_str)
             # traceback.print_exc()
             print(e)
+    elif '[ {' in ans_str:
+        ans_str = ans_str.replace('[ {', '[{')
+        ans_str = ans_str.split('} ]')[0] + '}]'
+        if '*' in ans_str:
+            ans_str = ans_str.split('*')[-1]
+        ans_str = ans_str.strip()
+        try:
+            ans_str = ans_str.replace("\'", "\"") 
+            ans_str = ans_str.replace("\\_", "_").replace(', ', ',')
+            ans_str = json.loads(ans_str)
+        except Exception as e:
+            # print(ans_str)
+            # traceback.print_exc()
+            print(e)
+    elif '}]' in ans_str:
+        if ans_str[0] == '{':
+            ans_str = '[' + ans_str
+        elif ans_str[0] == 'U' and ans_str[3] == "'":
+            ans_str = "[{'" + ans_str
+        elif ans_str[0] == 'U' and ans_str[3] == '"':
+            ans_str = '"' + ans_str
+            ans_str = "[{" + ans_str
+        elif ans_str[:3] == 'ttp' and "'label'" in ans_str:
+            ans_str = "[{'URL': 'h" + ans_str
+        elif ans_str[:3] == 'ttp' and '"label"' in ans_str:
+            ans_str = '[{"URL": "h' + ans_str
+        elif ans_str[0] == ':' and "'label'" in ans_str:
+            ans_str = "[{'URL'" + ans_str
+        elif ans_str[0] == ':' and '"label"' in ans_str:
+            ans_str = '[{"URL"' + ans_str
+        try:
+            ans_str = ans_str.replace("\'", "\"") 
+            # ans_str = r"{}".format(ans_str)
+            ans_str = ans_str.replace("\\_", "_").replace(', ', ',')
+            ans_str = json.loads(ans_str)
+        except Exception as e:
+            print('error point 0')
+            print(e)
+    elif '} ]' in ans_str:
+        if ans_str[0] == '{':
+            ans_str = '[' + ans_str
+        elif ans_str[0] == 'U' and ans_str[3] == "'":
+            ans_str = "[{'" + ans_str
+        elif ans_str[0] == 'U' and ans_str[3] == '"':
+            ans_str = '"' + ans_str
+            ans_str = "[{" + ans_str
+        elif ans_str[:3] == 'ttp' and "'label'" in ans_str:
+            ans_str = "[{'URL': 'h" + ans_str
+        elif ans_str[:3] == 'ttp' and '"label"' in ans_str:
+            ans_str = '[{"URL": "h' + ans_str
+        elif ans_str[0] == ':' and "'label'" in ans_str:
+            ans_str = "[{'URL'" + ans_str
+        elif ans_str[0] == ':' and '"label"' in ans_str:
+            ans_str = '[{"URL"' + ans_str
+        try:
+            ans_str = ans_str.replace("\'", "\"") 
+            # ans_str = r"{}".format(ans_str)
+            ans_str = ans_str.replace("\\_", "_").replace(', ', ',')
+            ans_str = json.loads(ans_str)
+        except Exception as e:
+            print('error point 00')
+            print(e)
+    elif '} {' in ans_str:
+        ans_str = ans_str.replace('} {', '}, {')
+        ans_str = '[' + ans_str + ']'
+        try:
+            ans_str = ans_str.replace("\'", "\"") 
+            # ans_str = r"{}".format(ans_str)
+            ans_str = json.loads(ans_str)
+        except Exception as e:
+            print('error point 1')
+            print(ans_str)
+            print(e)
+
+    else:
+        try:
+            # ans_str = ans_str.replace("\'", "\"") 
+            ans_str = json.loads(ans_str)
+        except Exception as e:
+            print(e)
+
     # if '*' in ans_str: 
         # print(ans_str)
     return ans_str
