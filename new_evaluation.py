@@ -6,10 +6,14 @@ from utils import partial_match, parse_answer
 
 parser = argparse.ArgumentParser(description="set params")
 parser.add_argument("--file")
+parser.add_argument("--startRepoID")
 args = parser.parse_args()
 
 if args.file:
     filepath = args.file
+if args.startRepoID:
+    startRepoID = int(args.startRepoID)
+
 
 # evaluation for one pair of annotation of predict and gold standard according to SemEval definition
 class anno_eval:
@@ -179,7 +183,7 @@ with open(filepath
 # for json_str in json_list:
 #     llm_output.append(json.loads(json_str))
 
-llm_output = [e for e in llm_output if int(e['repoID'])>=559 and int(e['repoID']) <= 7008 and int(e['repoID'])!=1351]
+llm_output = [e for e in llm_output if int(e['repoID'])>=startRepoID and int(e['repoID']) <= 7008 and int(e['repoID'])!=1351]
 predict_gold_pairs = []
 
 
