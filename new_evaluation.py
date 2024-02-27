@@ -7,13 +7,17 @@ from utils import partial_match, parse_answer
 parser = argparse.ArgumentParser(description="set params")
 parser.add_argument("--file")
 parser.add_argument("--startRepoID")
+parser.add_argument("--ignoreSkipped")
 args = parser.parse_args()
 
 if args.file:
     filepath = args.file
 if args.startRepoID:
     startRepoID = int(args.startRepoID)
-
+if args.ignoreSkipped:
+    ignoreSkipped = eval(args.ignoreSkipped)
+else: 
+    ignoreSkipped = False
 
 # evaluation for one pair of annotation of predict and gold standard according to SemEval definition
 class anno_eval:
@@ -27,17 +31,13 @@ class anno_eval:
 
     def _anno_mapping(self):
         res = []
-        # print('Point: 3')
         for anno_pair in self.pred_gold_pairs:
-            # print('Point: 4')
             pred, gold = anno_pair[0], anno_pair[1]
             if isinstance(pred, list):
                 # match the URL strings: prioritize exact match, then partial 
                 # each URL can only be matched once
                 matched_pred = set()
-                # print('Point: 5')
                 for idx_gold, URL_label_gold in enumerate(gold):
-                    # print('Point: 6')
                     URL_gold = URL_label_gold['URL']
                     candid_pred = list(set(range(len(pred))) - matched_pred)
                     candid_res = []
@@ -51,14 +51,12 @@ class anno_eval:
                         res.append((pred[selected_idx_pred], URL_label_gold))
                         break
                     for idx_pred in candid_pred:
-                        # print('Point: 7')
                         URL_label_pred = pred[idx_pred]
                         URL_pred = URL_label_pred['URL']
                         if URL_pred == URL_gold:
                             candid_res.append((idx_pred,1))
                             break
                         else:
-                            # print('Point: 8')
                             partial_score = partial_match(URL_pred, URL_gold)
                             candid_res.append((idx_pred, partial_score))
                     if candid_res[-1][1] == 1:
@@ -107,8 +105,6 @@ class anno_eval:
         self.cor, self.inc, self.mis, self.par, self.spr = [{'strict':0, 'exact':0, 'partial':0, 'type':0} for i in range(5)]
         for pred_gold in self.mapped_pairs:
             pred, gold = pred_gold[0], pred_gold[1]
-            # print('gold: ', gold)
-            # print("Prediction:", pred)
             try:
                 pred_URL, pred_label = pred['URL'], pred['label'].lower()
             except KeyError as e:
@@ -118,7 +114,6 @@ class anno_eval:
                 gold_URL, gold_label = gold['URL'], gold['gold_label'].lower()
             except Exception as e:
                 gold_URL, gold_label = gold['URL'], gold['label']# .lower()
-                # print(gold)
             if pred_URL == '':
                 self.mis = {k: v+1 for k,v in self.mis.items()}
                 continue
@@ -171,17 +166,8 @@ class anno_eval:
         pass
 
 
-# ./res/prompting_res/mistral-instruct_dynamic_all-MiniLM-L6-v2_fewshot_prompt_adjusted_maxlen_with_target_force_json_short_output_1.json
-with open(filepath
-        #'./res/prompting_res/llama_2_static_fewshot_prompt_with_target_adjusted_maxlen__force_json_short_output_1.json'
-        #./res/prompting_res/atwine-llama-2-7b-chat-fully-quantized-q4-06092023_static_fewshot_prompt_adjusted_maxlen_force_json_short_output_1.json'
-        , 'r') as fr:
+with open(filepath, 'r') as fr:
     llm_output = json.load(fr)
-# llm_output = []
-# with open('./res/llama2_7b_13b/llama-output-7b-newprompt_gold.json', 'r') as fr:
-#     llm_output = json.load(fr)
-# for json_str in json_list:
-#     llm_output.append(json.loads(json_str))
 
 llm_output = [e for e in llm_output if int(e['repoID'])>=startRepoID and int(e['repoID']) <= 7008 and int(e['repoID'])!=1351]
 predict_gold_pairs = []
@@ -200,7 +186,8 @@ for i in range(0,len(llm_output)):
     
     if test_str== 'skipped':
         img_pred = []
-        predict_gold_pairs.append((img_pred, URL_label_gold))
+        if not ignoreSkipped:
+            predict_gold_pairs.append((img_pred, URL_label_gold))
         continue
     parsed_ans = parse_answer(test_str)
 
@@ -248,7 +235,8 @@ for i in range(0,len(llm_output)):
         pass
     else:
         img_pred = ""
-        predict_gold_pairs.append((img_pred, URL_label_gold))
+        if not ignoreSkipped:
+            predict_gold_pairs.append((img_pred, URL_label_gold))
         print(i,llm_output[i]['repoID'], '\n', test_str, '\n', parsed_ans)
  
 

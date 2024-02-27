@@ -32,6 +32,9 @@ def parse_answer(ans_str):
         ans_str = ans_str.strip()[4:].strip()
     if 'Note:' in ans_str.strip():
         ans_str = ans_str.strip().split('Note:')[0].strip()
+    if '# Explanation' in ans_str.strip():
+        ans_str = ans_str.strip().split('# Explanation')[0].strip()
+
 
     ans_str = ans_str.strip()
     ans_str = ' '.join(ans_str.split())
