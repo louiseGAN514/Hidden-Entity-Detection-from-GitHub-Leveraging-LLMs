@@ -1,0 +1,32 @@
+<s>[INST]<<sys>>You act as a human annotator. First read the instructions and given examples, then only annotate the last given input accordingly without extra words. Your annotation has to use valid JSON syntax.<</sys>>
+    
+    Annotate the URLs in the input and classify the URLs with the following labels: 
+    1. DatasetDirectLink - the URL is for downloading dataset files
+    2. DatasetLandingPage - the URL is an introduction or a landing page for some dataset entity
+    3. Software - when the URL is for some software entity
+    4. Other - the URL does not fall into the above cases
+    
+    # formatting
+    Input: text containing one or more URLs.
+    Output: for each URL span, first output the URL span, then output one of the four above labels.
+    
+    # Examples:
+    # Example 1:
+    Input: {{{DYNAMIC EXAMPLE JSON TEXT 1}}}
+    Output: {{{DYNAMIC EXAMPLE OUTPUT JSON 1}}}
+
+    # Example 2:
+    Input: {{{DYNAMIC EXAMPLE JSON TEXT 2}}}
+    Output: {{{DYNAMIC EXAMPLE OUTPUT JSON 2}}}
+
+    # Example 3:
+    Input: {{{DYNAMIC EXAMPLE JSON TEXT 3}}}
+    Output: {{{DYNAMIC EXAMPLE OUTPUT JSON 3}}}
+
+    # Example 4:
+    Input: {{{DYNAMIC EXAMPLE JSON TEXT $}}}
+    Output: {{{DYNAMIC EXAMPLE OUTPUT JSON 4}}}
+    [/INST]
+    [INST]
+    # to annotate
+    Input: {{{INSERT JSON INPUT HERE}}}[/INST]
